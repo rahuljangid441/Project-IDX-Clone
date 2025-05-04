@@ -1,12 +1,17 @@
+import { useNavigate } from "react-router-dom";
 import { useCreateProject } from "../hooks/apis/mutations/useCreateProject";
 import { Button, Col , Row , Flex } from "antd";
 export const CreateProject = () => {
+
+  const navigate = useNavigate();
   const { createProjectMutation } = useCreateProject();
   async function handleCreateProject() {
     console.log("Going to create project");
     try {
-      await createProjectMutation();
+      const response = await createProjectMutation();
       console.log("Project created successfully");
+      navigate(`/project/${response.data}`)
+     
     } catch (Err) {
       console.error("Error creating project", Err);
     }
