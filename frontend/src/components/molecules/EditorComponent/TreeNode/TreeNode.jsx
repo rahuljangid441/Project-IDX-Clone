@@ -1,6 +1,8 @@
 import { IoIosArrowForward } from "react-icons/io";
 import { IoIosArrowDown } from "react-icons/io";
 import { useEffect, useState } from "react";
+import { FileIcon } from "../../../atoms/FileIcon/FileIcon";
+
 
 
 export const TreeNode = ({
@@ -12,11 +14,19 @@ export const TreeNode = ({
     const [visiblity , setVisibility] = useState({});
 
 
+
+
     function toggleVisibilty(name){
         setVisibility({
             ...visiblity,
             [name]:!visiblity[name]
         })
+    }
+
+    function computeExtension(fileFolderData){
+        const names = fileFolderData.name.split(".");
+        console.log("Names are ", names);
+        return names[names.length - 1];
     }
 
     useEffect(()=>{
@@ -38,23 +48,30 @@ export const TreeNode = ({
             border: "none",
               cursor: "pointer",
               outline: "none",
-              color: "black",
+              color: "white",
               backgroundColor: "transparent",
               paddingTop: "15px",
               fontSize: "15px",
             }}>  {visiblity[fileFolderData.name]? <IoIosArrowDown/> : <IoIosArrowForward/>} 
             {fileFolderData.name}</button>
         ):(
+
+<div style={{
+    display: "flex",
+    alignItems: "center",
+}}>
+            <FileIcon extension={computeExtension(fileFolderData)} />
             <p style={{
                 paddingTop: "10px",
               fontSize: "15px",
-              color: "black",
+              color: "white",
               backgroundColor: "transparent",
               border: "none",
               cursor: "pointer",
               outline: "none",
               marginLeft: "10px",
             }}>{fileFolderData.name}</p>
+            </div>
         )}
         
         { visiblity[fileFolderData.name] &&fileFolderData.children && fileFolderData.children.map((child) => (

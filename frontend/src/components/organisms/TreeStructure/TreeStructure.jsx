@@ -20,7 +20,7 @@ export const TreeStructure = () =>{
     },[projectId , setTreeStructure ,treeStructure])
     return (
         <>
-            <h1>TreeStructure</h1>
+
             <TreeNode fileFolderData ={treeStructure}/>
         </>
     )
