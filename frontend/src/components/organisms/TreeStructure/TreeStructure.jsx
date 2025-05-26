@@ -6,7 +6,7 @@ import { TreeNode } from "../../molecules/EditorComponent/TreeNode/TreeNode";
 export const TreeStructure = () =>{
 
     const {treeStructure , setTreeStructure} = useTreeStructureStore();
-    const { projectId } =useParams();
+    const { projectId } = useParams();
 
 
     useEffect(()=>{
