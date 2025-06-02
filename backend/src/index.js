@@ -60,7 +60,7 @@ editorNamespace.on("connection", (socket) => {
       console.log(event, path);
     });
   }
-  handleEditorSocketEvents(socket);
+  handleEditorSocketEvents(socket , editorNamespace);
 
   socket.on("message", (data) => {
     console.log("message received from client: ", data);
