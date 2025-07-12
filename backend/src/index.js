@@ -82,10 +82,10 @@ terminalNamespace.on("connection" ,(socket)=>{
    let projectId = socket.handshake.query['projectId'];
 
  
- socket.on("shell-input",(data)=>{
-    console.log("shell input received: ", data);
-    terminalNamespace.emit("shell-output" ,data)
-  })
+//  socket.on("shell-input",(data)=>{
+//     console.log("shell input received: ", data);
+//     terminalNamespace.emit("shell-output" ,data)
+//   })
 
   socket.on("disconnect" ,  ()=>{
     console.log("terminal namespace disconnected");
