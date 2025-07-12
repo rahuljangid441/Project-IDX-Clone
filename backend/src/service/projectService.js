@@ -12,7 +12,7 @@ export const CreateProjectService = async(req , res)=>{
             const projectId = uuid4();
             console.log("New Project id is" , projectId);
             await fs.mkdir(`./projects/${projectId}`);
-            console.log("New project folder with projectid" , projectId ,"is created");
+            // console.log("New project folder with projectid" , projectId ,"is created");
     
             const response = await execPromisified(REACT_PROJECT_COMMAND , {
                 cwd: `./projects/${projectId}`

@@ -12,7 +12,7 @@ export const createProjectController = async (req, res) => {
 
 export const getProjectTree = async(req , res)=>{
     const tree = await getProjectTreeService(req.params.projectId);
-    console.log("Tree path is",tree);
+    // console.log("Tree path is",tree);
 
     return res.status(200).json({
         data:tree,

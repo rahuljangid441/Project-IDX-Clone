@@ -7,6 +7,7 @@ import { Server } from "socket.io";
 import chokidar from "chokidar";
 import path from "path";
 import { handleEditorSocketEvents } from "./socketHandlers/editorHandler.js";
+import { handleContainerCreate } from "./container/handleContainerCreate.js";
 
 const app = express();
 const server = createServer(app);
@@ -44,7 +45,7 @@ editorNamespace.on("connection", (socket) => {
   console.log("editor namespace connected");
 
 
-  console.log("socket.handshake.query: ", socket.handshake.query['projectId']);
+  // console.log("socket.handshake.query: ", socket.handshake.query['projectId']);
  let projectId = socket.handshake.query['projectId'];
   if (projectId) {
     var wathcher = chokidar.watch(`./projects/${projectId}`, {
@@ -66,12 +67,32 @@ editorNamespace.on("connection", (socket) => {
     console.log("message received from client: ", data);
   });
 
+ 
   socket.on("disconnect", async (data) => {
     await wathcher.close();
     console.log("editor namespace disconnected");
   });
 });
 
+
+const terminalNamespace = io.of("/terminal");
+terminalNamespace.on("connection" ,(socket)=>{
+  console.log("terminal namespace connected", socket.id);
+
+   let projectId = socket.handshake.query['projectId'];
+
+ 
+ socket.on("shell-input",(data)=>{
+    console.log("shell input received: ", data);
+    terminalNamespace.emit("shell-output" ,data)
+  })
+
+  socket.on("disconnect" ,  ()=>{
+    console.log("terminal namespace disconnected");
+  });
+
+  handleContainerCreate(projectId , socket);
+})
 server.listen(PORT, () => {
   console.log("server running at http://localhost:3000");
 });
