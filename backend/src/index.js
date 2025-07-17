@@ -8,6 +8,7 @@ import chokidar from "chokidar";
 import path from "path";
 import { handleEditorSocketEvents } from "./socketHandlers/editorHandler.js";
 import { handleContainerCreate } from "./container/handleContainerCreate.js";
+import { WebSocketServer } from "ws";
 
 const app = express();
 const server = createServer(app);
@@ -75,24 +76,32 @@ editorNamespace.on("connection", (socket) => {
 });
 
 
-const terminalNamespace = io.of("/terminal");
-terminalNamespace.on("connection" ,(socket)=>{
-  console.log("terminal namespace connected", socket.id);
-
-   let projectId = socket.handshake.query['projectId'];
 
  
-//  socket.on("shell-input",(data)=>{
-//     console.log("shell input received: ", data);
-//     terminalNamespace.emit("shell-output" ,data)
-//   })
 
-  socket.on("disconnect" ,  ()=>{
-    console.log("terminal namespace disconnected");
-  });
-
-  handleContainerCreate(projectId , socket);
-})
 server.listen(PORT, () => {
   console.log("server running at http://localhost:3000");
 });
+
+const webSocketForTerminal = new WebSocketServer({
+  noServer: true // we will handle the upgrade manually
+});
+//server triggers upgrade event
+server.on("upgrade" , (req , socket , head)=>{
+//callback to be called when a client tries to connect through websocket
+/**
+ * req:incoming request object
+ * socket: TCP socket
+ * head: buffer containing the first packet of the message
+ */
+//make namespace for terminal
+
+const isTerminal = req.url.includes("/terminal");
+if(isTerminal){
+  console.log(req.url, `project id is ${req.url.split("=")[1]}`);
+}
+});
+
+webSocketForTerminal.on("connection",()=>{
+  console.log("websocket for terminal connected");
+})
