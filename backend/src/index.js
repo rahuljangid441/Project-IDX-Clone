@@ -8,7 +8,9 @@ import chokidar from "chokidar";
 import path from "path";
 import { handleEditorSocketEvents } from "./socketHandlers/editorHandler.js";
 import { handleContainerCreate } from "./container/handleContainerCreate.js";
+import { handleTerminalCreation } from "./controllers/handleTerminalCreation.js";
 import { WebSocketServer } from "ws";
+import { listContainers } from "./container/handleContainerCreate.js";
 
 const app = express();
 const server = createServer(app);
@@ -62,6 +64,13 @@ editorNamespace.on("connection", (socket) => {
       console.log(event, path);
     });
   }
+
+    socket.on("getPort" , ()=>{
+        console.log("getPort event received");
+        listContainers();
+    })
+
+
   handleEditorSocketEvents(socket , editorNamespace);
 
   socket.on("message", (data) => {
@@ -87,7 +96,7 @@ const webSocketForTerminal = new WebSocketServer({
   noServer: true // we will handle the upgrade manually
 });
 //server triggers upgrade event
-server.on("upgrade" , (req , socket , head)=>{
+server.on("upgrade" , (req , tcp , head)=>{
 //callback to be called when a client tries to connect through websocket
 /**
  * req:incoming request object
@@ -99,9 +108,25 @@ server.on("upgrade" , (req , socket , head)=>{
 const isTerminal = req.url.includes("/terminal");
 if(isTerminal){
   console.log(req.url, `project id is ${req.url.split("=")[1]}`);
+  let projectId = req.url.split("=")[1];
+  console.log("projectId: ", projectId);
+  handleContainerCreate(projectId , webSocketForTerminal,req ,tcp, head);
 }
 });
 
-webSocketForTerminal.on("connection",()=>{
-  console.log("websocket for terminal connected");
+webSocketForTerminal.on("connection",(ws , req , container)=>{
+  console.log("websocket for terminal connected",ws,req,container);
+  handleTerminalCreation(container,ws);
+
+ ws.on("getPort" , ()=>{
+  console.log("getPort event received");
+ })
+  ws.on("close" , ()=>{
+    container.remove({force:true} , (err , data)=>{
+      if(err){
+        console.error("Error removing container: ", err);
+      }
+      console.log("Container removed successfully: ", data);
+    });
+  })
 })
