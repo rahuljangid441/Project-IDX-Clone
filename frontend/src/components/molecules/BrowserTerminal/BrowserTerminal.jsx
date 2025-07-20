@@ -2,31 +2,32 @@ import { Terminal } from "@xterm/xterm"
 import { FitAddon } from "@xterm/addon-fit"
 import "@xterm/xterm/css/xterm.css"
 import { useEffect , useRef } from "react"
-import { io } from "socket.io-client"
-import { useParams } from "react-router-dom";
-
+// import { useParams } from "react-router-dom";
+import { AttachAddon } from "@xterm/addon-attach";
+import { useTerminalSocketStore } from "../../../store/terminalSocketStore";
 export const BrowserTerminal = () => {
 
     const terminalRef = useRef(null);
-    const socket = useRef(null);
-    let { projectId } = useParams();
-
+    // const socket = useRef(null);
+    // let { projectId } = useParams();
+    const { terminalSocket } = useTerminalSocketStore();
     useEffect(()=>{
         const terminal = new Terminal({
             cursorBlink: true,
-            fontSize:14,
-            fontFamily:"monospace",
-            convertEol: true,
             theme: {
                 background: "#282a37",
-                foreground: "#d4d4d4",
-                cursor: "#d4d4d4",
-                selection: "#264f78",
-                red: "#f14c4c",
-                green: "#23d18b",
-                cyan: "#29b8db",
-                yellow: "#e5c07b",
-            }
+                foreground: "#f8f8f3",
+                cursor: "#f8f8f3",
+                cursorAccent: "#282a37",
+                red: "#ff5544",
+                green: "#50fa7c",
+                yellow: "#f1fa8c",
+                cyan: "#8be9fd",
+            },
+            fontSize: 16,
+         
+            fontFamily: "Fira Code, monospace",
+            convertEol: true, // convert CRLF to LF
         });
 
         terminal.open(terminalRef.current);
@@ -34,30 +35,22 @@ export const BrowserTerminal = () => {
         terminal.loadAddon(fitAddon);
         fitAddon.fit();
 
-        socket.current = io(`${import.meta.env.VITE_BACKEND_URL}/terminal`, {
-            query:{
-                projectId: projectId
-            }
-        });
+       //const ws = new WebSocket("ws://localhost:3000/terminal?projectId=" + projectId);
 
-        socket.current.on("shell-output" , (data)=>{
-            console.log("Data from server: ", data);
-            terminal.write(data);
-        });
-
-        terminal.onData((data)=>{
-            console.log("Data from terminal: ", data);
-            //data we are typing in console by user
-            socket.current.emit("shell-input", data);
-        });
+       if(terminalSocket){
+           terminalSocket.onopen=()=>{
+               const attachAddon = new AttachAddon(terminalSocket);
+               terminal.loadAddon(attachAddon);
+           }
+       }
 
         return()=>{
             terminal.dispose();
-            socket.current.disconnect();
+            // socket.current.disconnect();
         }
 
 
-    },[])
+    },[terminalSocket])
     return(
         <div
         ref={terminalRef}
