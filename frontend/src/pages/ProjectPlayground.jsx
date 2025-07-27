@@ -1,82 +1,113 @@
 import { useParams } from "react-router-dom"
 import { EditorComponent } from "../components/molecules/EditorComponent/EditorComponent";
-import { EditorButton } from "../components/atoms/EditorButton/EditorButton";
 import { TreeStructure } from "../components/organisms/TreeStructure/TreeStructure";
-import { io } from 'socket.io-client';
+import { useEffect, useState } from "react";
+
 import { useEditorSocketStore } from "../store/editorSocketStore";
-// import { useTreeStructureStore } from "../store/treeStructureStore";
-import { useEffect } from "react";
+import { io } from "socket.io-client";
 import { BrowserTerminal } from "../components/molecules/BrowserTerminal/BrowserTerminal";
 import { useTerminalSocketStore } from "../store/terminalSocketStore";
+import { Browser } from "../components/organisms/Browser/Browser";
+import { Button } from "antd";
+import { Allotment } from "allotment";
+import "allotment/dist/style.css";
+export const ProjectPlayground = () => {
 
-export const ProjectPlayground = () =>{
+    const {projectId } = useParams();
 
+   
 
+    const { setEditorSocket } = useEditorSocketStore();
+    const { terminalSocket, setTerminalSocket } = useTerminalSocketStore();
 
-    const { projectId } = useParams();
+    const [loadBrowser, setLoadBrowser] = useState(false);
 
-    console.log("Project Id from URL is ", projectId);
+    useEffect(() => {
+        if(projectId) {
+            
+        
+            const editorSocketConn = io(`${import.meta.env.VITE_BACKEND_URL}/editor`, {
+                query: {
+                    projectId: projectId
+                }
+            });
 
-    
-
-    const{ setEditorSocket , editorSocket } = useEditorSocketStore();
-    const{ setTerminalSocket } = useTerminalSocketStore();
-
-    // const { setProjectId , projectId } = useTreeStructureStore();
-
-    function fetchPort(){
-        editorSocket.emit("getPort");
-        console.log("Port fetched");
-
-    }
-
-
-    useEffect(()=>{
-       const editorSocketConnection = io(`${import.meta.env.VITE_BACKEND_URL}/editor` , {
-        query:{
-            projectId:projectId
+            try {
+                const ws = new WebSocket("ws://localhost:4000/terminal?projectId="+projectId);
+                setTerminalSocket(ws);
+                
+            } catch(error) {
+                console.log("error in ws", error);
+            }
+            setEditorSocket(editorSocketConn);
         }
-       });
+        
+    }, [projectId, setEditorSocket, setTerminalSocket]);
 
-       const ws = new WebSocket("ws://localhost:3000/terminal?projectId=" + projectId);
-       setTerminalSocket(ws);
-       setEditorSocket(editorSocketConnection);
-    },[setEditorSocket , projectId, setTerminalSocket]);
-    return(
+    return (
         <>
-            Project Id is {projectId}
-            <div style={{
-                display:"flex",
-               
-            }}>
-            <div style={{
-                backgroundColor:"#333254",
-                paddingRight:"0.3vh",
-                paddingTop:"0.3vh",
-                minWidth:"250px",
-                maxWidth:"25%",
-                height:"99.7vh",
-                overflow:"auto"
-            }}>
-            <TreeStructure />
+        <div style={{ display: "flex" }}>
+            { projectId && (
+                    <div
+                        style={{
+                            backgroundColor: "#333254",
+                            paddingRight: "10px",
+                            paddingTop: "0.3vh",
+                            minWidth: "250px",
+                            maxWidth: "25%",
+                            height: "100vh",
+                            overflow: "auto"
+                        }}
+                    >
+                        <TreeStructure />
+                    </div>
+                )}
+            <div
+                style={{
+                    width: "100vw",
+                    height: "100vh"
+                }}
+            >
+                <Allotment>
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            width: "100%",
+                            height: "100%",
+                            backgroundColor: "#282a36"
+
+                        }}
+                    >
+
+                    <Allotment
+                        vertical={true}
+                    >
+                        <EditorComponent />
+                        {/* <Divider style={{color: 'white', backgroundColor: '#333254'}} plain>Terminal</Divider> */}
+                        <BrowserTerminal />
+                    </Allotment>
+                        
+                       
+                        
+                    </div>
+                    <div>
+                        <Button
+                            onClick={() => setLoadBrowser(true)}
+                        >
+                            Load my browser
+                        </Button>
+                        { loadBrowser && projectId && terminalSocket && <Browser projectId={projectId} />}
+                    </div>
+                </Allotment>
+
             </div>
+        </div>
+           
+            {/* <EditorButton isActive={false} /> 
+            <EditorButton isActive={true}/>  */}
             
-
-            <EditorComponent />
-            </div>
             
-            <EditorButton isActive={true}/>
-            <EditorButton isActive={false}/>
-
-           <div>
-            <BrowserTerminal />
-           </div>
-
-           <div>
-            <button onClick={fetchPort}>
-                Get Port
-            </button>
-           </div>
         </>
     )
 }
